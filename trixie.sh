@@ -22,13 +22,19 @@ IPV6_GW=$(awk '$1 == "gateway" {print $2; exit}' /etc/network/interfaces.d/60-re
 MAC=$(cat /sys/class/net/eth0/address)
 
 swapoff -a || true
-umount "${DISK}p1" "${DISK}p3" 2>/dev/null || true
+# Le rescue peut avoir laissé /mnt/efi, /mnt/debian ou d'autres montages actifs.
+# Démonter par point de montage, y compris les montages multiples d'une partition.
+for part in "${DISK}"p{1..4}; do
+    while mp=$(findmnt -rn -S "$part" -o TARGET | head -n 1) && [[ -n "$mp" ]]; do
+        umount "$mp"
+    done
+done
 wipefs -af "$DISK"
 sgdisk --zap-all "$DISK"
 sgdisk -n 1:0:+1G -t 1:ef00 -c 1:EFI "$DISK"
 sgdisk -n 2:0:+8G -t 2:8200 -c 2:SWAP "$DISK"
 sgdisk -n 3:0:+20G -t 3:8300 -c 3:DEBIAN "$DISK"
-sgdisk -n 4:0:0 -t 4:8300 -c 3:DATA "$DISK"
+sgdisk -n 4:0:0 -t 4:8300 -c 4:DATA "$DISK"
 partprobe "$DISK"
 udevadm settle
 mkfs.fat -F 32 -n EFI "${DISK}p1"

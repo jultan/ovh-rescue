@@ -118,6 +118,8 @@ ssh-keygen -A
 systemctl enable ssh systemd-networkd systemd-resolved
 update-initramfs -u -k all
 grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=Debian --no-nvram
+# Chemin UEFI de repli pour le chaînage disque depuis le PXE OVH/rEFInd.
+grub-install --target=x86_64-efi --efi-directory=/boot --removable --no-nvram
 update-grub
 EOF
 
@@ -125,7 +127,7 @@ EOF
 findmnt "$TARGET"
 findmnt "$TARGET/boot"
 ls -lh "$TARGET"/boot/vmlinuz-* "$TARGET"/boot/initrd.img-*
-ls -lh "$TARGET/boot/EFI/Debian/grubx64.efi"
+ls -lh "$TARGET/boot/EFI/Debian/grubx64.efi" "$TARGET/boot/EFI/BOOT/BOOTX64.EFI"
 chroot "$TARGET" dpkg-query -W linux-image-amd64 grub-efi-amd64 openssh-server
 
 printf '\nDebian Trixie installée sur %s (IPv6 %s). Redémarrage manuel.\n' "$DISK" "$IPV6_ADDR"

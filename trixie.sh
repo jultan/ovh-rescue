@@ -26,7 +26,7 @@ sgdisk --zap-all "$DISK"
 sgdisk -n 1:0:+1G -t 1:ef00 -c 1:EFI "$DISK"
 sgdisk -n 2:0:+8G -t 2:8200 -c 2:SWAP "$DISK"
 sgdisk -n 3:0:+20G -t 3:8300 -c 3:DEBIAN "$DISK"
-sgdisk -n 4:0:0 -t 3:8300 -c 3:DATA "$DISK"
+sgdisk -n 4:0:0 -t 4:8300 -c 3:DATA "$DISK"
 partprobe "$DISK"
 udevadm settle
 mkfs.fat -F 32 -n EFI "${DISK}p1"

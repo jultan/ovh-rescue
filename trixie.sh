@@ -107,7 +107,7 @@ chroot "$TARGET" /bin/bash -e <<'EOF'
 ssh-keygen -A
 systemctl enable ssh systemd-networkd systemd-resolved
 update-initramfs -u -k all
-grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=Debian
+grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=Debian --no-nvram
 update-grub
 EOF
 

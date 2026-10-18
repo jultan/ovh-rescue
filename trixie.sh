@@ -7,7 +7,7 @@ DISK=/dev/nvme0n1
 HOSTNAME_DEBIAN=trixie01
 TARGET=/mnt/ovh-trixie
 
-if [[ \${1:-} != --isolated ]]; then
+if [[ ${1:-} != --isolated ]]; then
     exec unshare --mount --propagation private -- bash "$(readlink -f "$0")" --isolated
 fi
 
@@ -20,7 +20,7 @@ IPV6_GW=$(awk '$1 == "gateway" {print $2; exit}' /etc/network/interfaces.d/60-re
 MAC=$(cat /sys/class/net/eth0/address)
 
 swapoff -a || true
-umount "\${DISK}p1" "\${DISK}p3" 2>/dev/null || true
+umount "${DISK}p1" "${DISK}p3" 2>/dev/null || true
 wipefs -af "$DISK"
 sgdisk --zap-all "$DISK"
 sgdisk -n 1:0:+1G -t 1:ef00 -c 1:EFI "$DISK"
@@ -29,15 +29,15 @@ sgdisk -n 3:0:+20G -t 3:8300 -c 3:DEBIAN "$DISK"
 sgdisk -n 4:0:0 -t 3:8300 -c 3:DATA "$DISK"
 partprobe "$DISK"
 udevadm settle
-mkfs.fat -F 32 -n EFI "\${DISK}p1"
-mkswap -L SWAP "\${DISK}p2"
-mkfs.ext4 -F -L DEBIAN "\${DISK}p3"
-mkfs.ext4 -F -L DATA "\${DISK}p4"
+mkfs.fat -F 32 -n EFI "${DISK}p1"
+mkswap -L SWAP "${DISK}p2"
+mkfs.ext4 -F -L DEBIAN "${DISK}p3"
+mkfs.ext4 -F -L DATA "${DISK}p4"
 
 mkdir -p "$TARGET"
-mount "\${DISK}p3" "$TARGET"
+mount "${DISK}p3" "$TARGET"
 mkdir -p "$TARGET/boot"
-mount "\${DISK}p1" "$TARGET/boot"
+mount "${DISK}p1" "$TARGET/boot"
 
 debootstrap --arch=amd64 --variant=minbase trixie "$TARGET" https://deb.debian.org/debian
 
@@ -47,9 +47,9 @@ deb https://deb.debian.org/debian trixie-updates main contrib non-free non-free-
 deb https://security.debian.org/debian-security trixie-security main contrib non-free non-free-firmware
 EOF
 
-ROOT_UUID=$(blkid -s UUID -o value "\${DISK}p3")
-EFI_UUID=$(blkid -s UUID -o value "\${DISK}p1")
-SWAP_UUID=$(blkid -s UUID -o value "\${DISK}p2")
+ROOT_UUID=$(blkid -s UUID -o value "${DISK}p3")
+EFI_UUID=$(blkid -s UUID -o value "${DISK}p1")
+SWAP_UUID=$(blkid -s UUID -o value "${DISK}p2")
 cat > "$TARGET/etc/fstab" <<EOF
 UUID=$ROOT_UUID / ext4 defaults 0 1
 UUID=$EFI_UUID /boot vfat umask=0077 0 2

@@ -114,7 +114,7 @@ chroot "$TARGET" /bin/bash -e <<'EOF'
 ssh-keygen -A
 systemctl enable sshd systemd-networkd systemd-resolved
 mkinitcpio -P
-grub-install --target=x86_64-efi --efi-directory=/boot --no-nvram --removable
+grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=Arch
 grub-mkconfig -o /boot/grub/grub.cfg
 EOF
 

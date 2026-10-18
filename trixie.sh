@@ -83,7 +83,7 @@ cp -L /etc/resolv.conf "$TARGET/etc/resolv.conf"
 chroot "$TARGET" apt-get update
 chroot "$TARGET" apt-get install -y --no-install-recommends \
     linux-image-amd64 initramfs-tools grub-efi-amd64 efibootmgr \
-    systemd-sysv systemd-networkd systemd-resolved \
+    systemd-sysv systemd-resolved \
     openssh-server ca-certificates vim
 
 mkdir -p "$TARGET/etc/systemd/network"

@@ -7,6 +7,11 @@ BOOTSTRAP=/run/arch-ovh-bootstrap
 TARGET=/mnt/arch-ovh-target
 MIRROR=${MIRROR:-https://geo.mirror.pkgbuild.com}
 
+# Un espace de noms privé empêche la propagation des montages au rescue.
+if [[ ${1:-} != --isolated ]]; then
+    exec unshare --mount --propagation private -- bash "$(readlink -f "$0")" --isolated
+fi
+
 export DEBIAN_FRONTEND=noninteractive
 apt-get update
 apt-get install -y curl ca-certificates zstd gdisk dosfstools e2fsprogs util-linux parted
@@ -30,6 +35,8 @@ mkswap -L SWAP "${DISK}p2"
 mkfs.ext4 -F -L ARCH "${DISK}p3"
 
 mkdir -p "$TARGET" "$BOOTSTRAP"
+# Le bootstrap et son cache pacman résident en RAM, hors du rootfs limité du rescue.
+mount -t tmpfs -o size=3G,mode=0755 tmpfs "$BOOTSTRAP"
 mount "${DISK}p3" "$TARGET"
 mkdir -p "$TARGET/boot"
 mount "${DISK}p1" "$TARGET/boot"

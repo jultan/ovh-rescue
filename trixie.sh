@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -Eeuxo pipefail
+PS4='+ ${LINENO}: '
+trap 'echo "ERREUR ligne $LINENO (code $?)" >&2' ERR
 
 # Debian 13 Trixie depuis Debian Rescue OVH (UEFI).
 # ATTENTION : efface le disque sans confirmation.
@@ -112,5 +114,12 @@ update-initramfs -u -k all
 grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=Debian --no-nvram
 update-grub
 EOF
+
+# Vérifier que les fichiers ont réellement été écrits sur les partitions montées.
+findmnt "$TARGET"
+findmnt "$TARGET/boot"
+ls -lh "$TARGET"/boot/vmlinuz-* "$TARGET"/boot/initrd.img-*
+ls -lh "$TARGET/boot/EFI/Debian/grubx64.efi"
+chroot "$TARGET" dpkg-query -W linux-image-amd64 grub-efi-amd64 openssh-server
 
 printf '\nDebian Trixie installée sur %s (IPv6 %s). Redémarrage manuel.\n' "$DISK" "$IPV6_ADDR"

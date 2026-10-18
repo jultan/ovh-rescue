@@ -109,6 +109,9 @@ mount --bind /dev "$TARGET/dev"
 mount -t devpts devpts "$TARGET/dev/pts"
 mount -t proc proc "$TARGET/proc"
 mount --bind /sys "$TARGET/sys"
+# /sys est monté sans ses sous-montages : rendre efivarfs accessible à efibootmgr.
+mkdir -p "$TARGET/sys/firmware/efi/efivars"
+mount -t efivarfs efivarfs "$TARGET/sys/firmware/efi/efivars"
 mount -t tmpfs tmpfs "$TARGET/run"
 chroot "$TARGET" /bin/bash -e <<'EOF'
 ssh-keygen -A

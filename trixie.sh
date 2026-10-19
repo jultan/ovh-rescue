@@ -44,10 +44,11 @@ mkfs.ext4 -F -L DATA "${DISK}p4"
 
 mkdir -p "$TARGET"
 mount "${DISK}p3" "$TARGET"
-mkdir -p "$TARGET/boot"
-mount "${DISK}p1" "$TARGET/boot"
-
 debootstrap --arch=amd64 --variant=minbase trixie "$TARGET" https://deb.debian.org/debian
+
+# Garder noyau et initramfs dans /boot (ext4), ESP montée sur /boot/efi.
+mkdir -p "$TARGET/boot/efi"
+mount "${DISK}p1" "$TARGET/boot/efi"
 
 cat > "$TARGET/etc/apt/sources.list" <<'EOF'
 deb https://deb.debian.org/debian trixie main contrib non-free non-free-firmware
@@ -60,7 +61,7 @@ EFI_UUID=$(blkid -s UUID -o value "${DISK}p1")
 SWAP_UUID=$(blkid -s UUID -o value "${DISK}p2")
 cat > "$TARGET/etc/fstab" <<EOF
 UUID=$ROOT_UUID / ext4 defaults 0 1
-UUID=$EFI_UUID /boot vfat umask=0077 0 2
+UUID=$EFI_UUID /boot/efi vfat umask=0077 0 2
 UUID=$SWAP_UUID none swap defaults 0 0
 EOF
 
@@ -117,17 +118,17 @@ chroot "$TARGET" /bin/bash -e <<'EOF'
 ssh-keygen -A
 systemctl enable ssh systemd-networkd systemd-resolved
 update-initramfs -u -k all
-grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=Debian --no-nvram
+grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=debian --no-nvram
 # Chemin UEFI de repli pour le chaînage disque depuis le PXE OVH/rEFInd.
-grub-install --target=x86_64-efi --efi-directory=/boot --removable --no-nvram
+grub-install --target=x86_64-efi --efi-directory=/boot/efi --removable --no-nvram
 update-grub
 EOF
 
 # Vérifier que les fichiers ont réellement été écrits sur les partitions montées.
 findmnt "$TARGET"
-findmnt "$TARGET/boot"
+findmnt "$TARGET/boot/efi"
 ls -lh "$TARGET"/boot/vmlinuz-* "$TARGET"/boot/initrd.img-*
-ls -lh "$TARGET/boot/EFI/Debian/grubx64.efi" "$TARGET/boot/EFI/BOOT/BOOTX64.EFI"
+ls -lh "$TARGET/boot/efi/EFI/debian/grubx64.efi" "$TARGET/boot/efi/EFI/BOOT/BOOTX64.EFI"
 chroot "$TARGET" dpkg-query -W linux-image-amd64 grub-efi-amd64 openssh-server
 
 printf '\nDebian Trixie installée sur %s (IPv6 %s). Redémarrage manuel.\n' "$DISK" "$IPV6_ADDR"

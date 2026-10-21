@@ -51,9 +51,9 @@ mkdir -p "$TARGET/boot/efi"
 mount "${DISK}p1" "$TARGET/boot/efi"
 
 cat > "$TARGET/etc/apt/sources.list" <<'EOF'
-deb https://deb.debian.org/debian trixie main contrib non-free non-free-firmware
-deb https://deb.debian.org/debian trixie-updates main contrib non-free non-free-firmware
-deb https://security.debian.org/debian-security trixie-security main contrib non-free non-free-firmware
+deb https://debian.mirrors.ovh.net/debian trixie main contrib non-free non-free-firmware
+deb https://debian.mirrors.ovh.net/debian trixie-updates main contrib non-free non-free-firmware
+deb https://debian.mirrors.ovh.net/debian-security trixie-security main contrib non-free non-free-firmware
 EOF
 
 ROOT_UUID=$(blkid -s UUID -o value "${DISK}p3")
